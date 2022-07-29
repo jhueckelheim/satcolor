@@ -56,39 +56,40 @@ def find_coloring(matrix, n_colors):
     for node in nodes:
         for color in colors:
             vs.append(z3.Bool('%s%s'%(node, color)))
-            adjacent_not_same = []
-            for (n1, n2) in edges:
-                for color in colors:
-                    v1 = z3.Bool('%s%s'%(n1, color))
-                    v2 = z3.Bool('%s%s'%(n2, color))
-                    adjacent_not_same.append(z3.Or(z3.Not(v1), z3.Not(v2)))
 
-            at_least_one_color = []
-            for node in nodes:
-                disj = []
-                for color in colors:
-                    disj.append(z3.Bool('{}{}'.format(node, color)))
-                at_least_one_color.append(z3.Or(disj))
+    adjacent_not_same = []
+    for (n1, n2) in edges:
+        for color in colors:
+            v1 = z3.Bool('%s%s'%(n1, color))
+            v2 = z3.Bool('%s%s'%(n2, color))
+            adjacent_not_same.append(z3.Or(z3.Not(v1), z3.Not(v2)))
 
-            at_most_one_color = []
-            for node in nodes:
-                for i in range(len(colors)):
-                    for j in range(i+1, len(colors)):
-                        at_most_one_color.append(z3.Or([z3.Not(z3.Bool('%s%s'%(node, colors[i]))), 
-                                                    z3.Not(z3.Bool('%s%s'%(node, colors[j])))]))
+    at_least_one_color = []
+    for node in nodes:
+        disj = []
+        for color in colors:
+            disj.append(z3.Bool('{}{}'.format(node, color)))
+        at_least_one_color.append(z3.Or(disj))
 
-            s = z3.Solver()
-            s.add(adjacent_not_same)
-            s.add(at_least_one_color)
-            s.add(at_most_one_color)
-            if s.check() == z3.sat:
-                for v in nodes:
-                    for color in colors:
-                        if z3.is_true(s.model().eval(z3.Bool('%s%s'%(v, color)))):
-                            print("node %s has color %s"%(v, color))
-                return True
-            else:
-                return False
+    at_most_one_color = []
+    for node in nodes:
+        for i in range(len(colors)):
+            for j in range(i+1, len(colors)):
+                at_most_one_color.append(z3.Or([z3.Not(z3.Bool('%s%s'%(node, colors[i]))), 
+                                            z3.Not(z3.Bool('%s%s'%(node, colors[j])))]))
+
+    s = z3.Solver()
+    s.add(adjacent_not_same)
+    s.add(at_least_one_color)
+    s.add(at_most_one_color)
+    if s.check() == z3.sat:
+        for v in nodes:
+            for color in colors:
+                if z3.is_true(s.model().eval(z3.Bool('%s%s'%(v, color)))):
+                    print("node %s has color %s"%(v, color))
+        return True
+    else:
+        return False
 
 adj_matrix = file_to_adj_matrix(sys.argv[1])
 i = 0
